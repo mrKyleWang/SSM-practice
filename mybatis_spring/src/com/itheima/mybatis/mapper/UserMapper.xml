@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace：命名空间，用于隔离sql，还有一个很重要的作用，后面会讲 -->
+<mapper namespace="com.itheima.mybatis.mapper.UserMapper">
+
+	<sql id="selector">
+		select * from user
+	</sql>
+
+	<!-- 通过ID查询一个用户 -->
+	<select id="findUserById" parameterType="int"
+		resultType="com.itheima.mybatis.pojo.User">
+		SELECT * FROM user WHERE id = #{id}
+	</select>
+
+	<!-- 根据用户名模糊查询 -->
+	<select id="queryUserByUsername" parameterType="String"
+		resultType="com.itheima.mybatis.pojo.User">
+		<!-- ${}内必须用value -->
+		SELECT * FROM user WHERE username LIKE '%${value}%'
+		<!-- SELECT * FROM user WHERE username LIKE "%"#{any}"%" -->
+	</select>
+
+	<!-- 保存用户 -->
+	<insert id="saveUser" parameterType="com.itheima.mybatis.pojo.User">
+		<!-- selectKey 标签实现主键返回 -->
+		<!-- keyProperty：主键对应的pojo中的哪一个属性 -->
+		<!-- order：设置在执行insert语句前执行查询id的sql，孩纸在执行insert语句之后执行查询id的sql -->
+		<!-- resultType：设置返回的id的类型 -->
+		<selectKey keyProperty="id" order="AFTER" resultType="Integer">
+			SELECT
+			LAST_INSERT_ID()
+		</selectKey>
+		INSERT INTO `user`
+		(username,birthday,sex,address) VALUES
+		(#{username},#{birthday},#{sex},#{address})
+	</insert>
+
+	<!-- 根据用户名模糊查询 -->
+	<select id="findUserByQueryVo" parameterType="QueryVo"
+		resultType="com.itheima.mybatis.pojo.User">
+		SELECT * FROM user WHERE username LIKE
+		"%"#{user.username}"%"
+	</select>
+
+
+	<!-- 查询总条数 -->
+	<select id="countUser" resultType="Integer">
+		select count(*) from user
+	</select>
+
+	<!-- 根据性别和名字查询用户 -->
+	<select id="selectUserBySexAndUsername" parameterType="User"
+		resultType="User">
+		<include refid="selector"/>
+		<where>
+			<if test="sex != null and sex != ''">
+				sex = #{sex}
+			</if>
+			<if test="username != null and username != ''">
+				username = #{username}
+			</if>
+		</where>
+	</select>
+
+	<!-- 根据多个id(数组)查询User -->
+	<select id="selectUserByIds" parameterType="QueryVo" resultType="User">
+		<include refid="selector"/>
+		<where>
+			id in
+			<!-- foreach标签，进行遍历 -->
+			<!-- collection：遍历的集合，这里是QueryVo的ids属性 -->
+			<!-- item：遍历的项目，可以随便写，，但是和后面的#{}里面要一致 -->
+			<!-- open：在前面添加的sql片段 -->
+			<!-- close：在结尾处添加的sql片段 -->
+			<!-- separator：指定遍历的元素之间使用的分隔符 -->
+			<foreach collection="array" item="id" separator="," open="(" close=")">
+				#{id}
+			</foreach>
+		</where>
+	</select>
+	
+	<!-- 一对多 -->
+	<resultMap type="User" id="user">
+		<id column="user_id" property="id"/>
+		<result column="username" property="username"/>
+		<collection property="list" ofType="Orders">
+			<id column="id" property="id"/>
+			<result column="number" property="number"/>
+		</collection>
+	</resultMap>
+	<select id="selectUsers" resultMap="user" >
+		select
+		o.id,
+		o.number,
+		o.user_id,
+		u.username
+		from user u
+		left outer join orders o
+		on o.user_id = u.id;
+	</select>
+	
+	
+	
+	
+</mapper>

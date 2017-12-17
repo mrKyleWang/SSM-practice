@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace：命名空间，用于隔离sql，还有一个很重要的作用，后面会讲 -->
+<mapper namespace="test">
+
+	<!-- 通过ID查询一个用户 -->
+	<select id="findUserById" parameterType="Integer"
+		resultType="com.itheima.mybatis.pojo.User">
+		SELECT * FROM user WHERE id = #{id}
+	</select>
+
+	<!-- 通过ID查询一个用户 -->
+	<select id="findUserByUsername" parameterType="String"
+		resultType="com.itheima.mybatis.pojo.User">
+		<!-- ${}内必须用value -->
+		SELECT * FROM user WHERE username LIKE '%${value}%'
+		<!-- SELECT * FROM user WHERE username LIKE "%"#{any}"%" -->
+	</select>
+
+	<!-- 保存用户 -->
+	<insert id="saveUser" parameterType="com.itheima.mybatis.pojo.User">
+		<!-- selectKey 标签实现主键返回 -->
+		<!-- keyProperty：主键对应的pojo中的哪一个属性 -->
+		<!-- order：设置在执行insert语句前执行查询id的sql，孩纸在执行insert语句之后执行查询id的sql -->
+		<!-- resultType：设置返回的id的类型 -->
+		<selectKey keyProperty="id" order="AFTER" resultType="Integer">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		INSERT INTO `user`
+		(username,birthday,sex,address) VALUES
+		(#{username},#{birthday},#{sex},#{address})
+	</insert>
+
+	<!-- 更新用户 -->
+	<update id="updateUserById" parameterType="com.itheima.mybatis.pojo.User">
+		UPDATE user
+		SET username = #{username},sex = #{sex},birthday = #{birthday},address =
+		#{address}
+		where id = #{id}
+	</update>
+
+	<!-- 删除用户 -->
+	<delete id="deleteUserById" parameterType="Integer">
+		DELETE FROM user
+		WHERE
+		id = #{id}
+	</delete>
+
+
+</mapper>
